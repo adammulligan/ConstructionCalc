@@ -1,0 +1,29 @@
+[package]
+name = "fraccalc-core"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "fraccalc_core"
+crate-type = ["staticlib", "cdylib"]
+
+[[bin]]
+name = "uniffi-bindgen"
+path = "src/bin/uniffi-bindgen.rs"
+
+[dependencies]
+uniffi = { version = "0.29", features = ["cli"] }
+thiserror = "2"
+
+[dev-dependencies]
+proptest = "1"
+
+[build-dependencies]
+uniffi = { version = "0.29", features = ["build"] }
+
+[profile.release]
+opt-level = "z"
+lto = true
+strip = true
+panic = "abort"
+debug = false
