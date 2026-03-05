@@ -1,0 +1,9 @@
+# Seeds for failure cases proptest has generated in the past. It is
+# automatically read and these particular cases re-run before any
+# novel cases are generated.
+#
+# It is recommended to check this file in to source control so that
+# everyone who runs the test benefits from these saved cases.
+cc 6f7a91dcff85e6c38780681be721a56dbc3b01887aa7b30bfc5eb1484baf896f # shrinks to a = Measurement { numerator: 2498, denominator: 2 }, b = Measurement { numerator: 1, denominator: 1 }
+cc 79936ac7d15f1dbb14b8c4b26b8352f31e8b9bb0b516f2a77ee682877d8a8809 # shrinks to a = Measurement { numerator: 62, denominator: 2 }
+cc 6fd8f383db8bd2f80dbd955369573c5b78bf60fca88ab0c1a905481911723e64 # shrinks to a = Measurement { numerator: 854, denominator: 2 }
