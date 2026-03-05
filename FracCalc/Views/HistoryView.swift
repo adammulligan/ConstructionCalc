@@ -1,0 +1,40 @@
+import SwiftUI
+
+struct HistoryView: View {
+    let viewModel: HistoryViewModel
+    let onSelect: (HistoryEntry) -> Void
+    let onClearAll: () -> Void
+
+    var body: some View {
+        NavigationStack {
+            List {
+                ForEach(viewModel.entries, id: \.id) { entry in
+                    Button {
+                        onSelect(entry)
+                    } label: {
+                        VStack(alignment: .leading) {
+                            Text(entry.expression)
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                            Text(formattedResult(entry))
+                                .font(.title3)
+                                .fontWeight(.medium)
+                        }
+                    }
+                }
+            }
+            .navigationTitle("History")
+            .toolbar {
+                Button("Clear All", role: .destructive) { onClearAll() }
+            }
+        }
+    }
+
+    private func formattedResult(_ entry: HistoryEntry) -> String {
+        let m = entry.resultMeasurement
+        switch entry.displayFormat {
+        case .feetInches: return FracCalcBridge.formatFeetInches(m)
+        case .inchesOnly: return FracCalcBridge.formatInchesOnly(m)
+        }
+    }
+}
