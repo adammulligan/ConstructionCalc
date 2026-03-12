@@ -94,6 +94,10 @@ class CalculatorViewModel {
     }
 
     func toggleDisplayFormat() {
+        // If there's typed input but no result yet, parse it first
+        if state.currentResult == nil && !state.inputBuffer.isEmpty {
+            evaluateCurrentInput()
+        }
         state.displayFormat = (state.displayFormat == .feetInches) ? .inchesOnly : .feetInches
         if let m = state.currentResult {
             updateDisplay(m)
