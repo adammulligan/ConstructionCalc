@@ -1,10 +1,13 @@
 import SwiftUI
+import SwiftData
 
 struct CalculatorView: View {
     @State private var viewModel = CalculatorViewModel()
     @AppStorage("maxDenominator") private var maxDenominator: Int = 16
     @State private var showSettings = false
     @State private var showHistory = false
+    @State private var historyViewModel = HistoryViewModel()
+    @Environment(\.modelContext) private var modelContext
 
     var body: some View {
         VStack(spacing: 12) {
@@ -30,6 +33,9 @@ struct CalculatorView: View {
             )
         }
         .padding()
+        .onAppear {
+            viewModel.modelContext = modelContext
+        }
         .onChange(of: maxDenominator) {
             viewModel.maxDenominator = Int64(maxDenominator)
         }
@@ -38,14 +44,19 @@ struct CalculatorView: View {
         }
         .sheet(isPresented: $showHistory) {
             HistoryView(
-                viewModel: HistoryViewModel(),
+                viewModel: historyViewModel,
                 onSelect: { entry in
                     viewModel.state.currentResult = entry.resultMeasurement
                     viewModel.state.displayText = FracCalcBridge.fmtFeetInches(entry.resultMeasurement)
                     showHistory = false
                 },
-                onClearAll: {}
+                onClearAll: {
+                    historyViewModel.clearAll(context: modelContext)
+                }
             )
+            .onAppear {
+                historyViewModel.load(context: modelContext)
+            }
         }
     }
 }

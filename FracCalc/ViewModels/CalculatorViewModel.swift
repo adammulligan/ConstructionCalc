@@ -1,9 +1,11 @@
 import SwiftUI
+import SwiftData
 
 @Observable
 class CalculatorViewModel {
     var state = CalculatorState()
     var maxDenominator: Int64 = 16
+    var modelContext: ModelContext?
 
     func digitPressed(_ digit: String) {
         state.inputBuffer += digit
@@ -31,13 +33,25 @@ class CalculatorViewModel {
         }
         if let result = state.currentResult {
             state.firstOperand = result
+            state.expressionParts.append(FracCalcBridge.fmtFeetInches(result))
         }
         state.pendingOperator = op
+        let opSymbol: String
+        switch op {
+        case .add: opSymbol = "+"
+        case .subtract: opSymbol = "\u{2212}"
+        case .multiply: opSymbol = "\u{00D7}"
+        case .divide: opSymbol = "\u{00F7}"
+        }
+        state.expressionParts.append(opSymbol)
         state.inputBuffer = ""
     }
 
     func equalsPressed() {
         if !state.inputBuffer.isEmpty {
+            if let parsed = try? FracCalcBridge.parse(state.inputBuffer) {
+                state.expressionParts.append(FracCalcBridge.fmtFeetInches(parsed))
+            }
             evaluateCurrentInput()
         }
         guard let first = state.firstOperand,
@@ -64,6 +78,8 @@ class CalculatorViewModel {
         state.firstOperand = nil
         state.pendingOperator = nil
         updateDisplay(snapped.value)
+        saveHistory(expression: state.expressionParts.joined(separator: " "), result: snapped.value)
+        state.expressionParts = []
     }
 
     func clearPressed() {
@@ -122,6 +138,18 @@ class CalculatorViewModel {
             return
         }
         state.currentResult = parsed
+    }
+
+    private func saveHistory(expression: String, result: Measurement) {
+        guard let context = modelContext else { return }
+        let entry = HistoryEntry(
+            expression: expression,
+            resultNumerator: result.numerator,
+            resultDenominator: result.denominator,
+            displayFormat: state.displayFormat
+        )
+        context.insert(entry)
+        try? context.save()
     }
 
     private func updateDisplay(_ m: Measurement) {
