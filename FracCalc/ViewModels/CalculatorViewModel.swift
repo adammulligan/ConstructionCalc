@@ -80,6 +80,7 @@ class CalculatorViewModel {
         updateDisplay(snapped.value)
         saveHistory(expression: state.expressionParts.joined(separator: " "), result: snapped.value)
         state.expressionParts = []
+        state.inputBuffer = ""
     }
 
     func clearPressed() {
