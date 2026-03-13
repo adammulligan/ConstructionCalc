@@ -94,12 +94,20 @@ class CalculatorViewModel {
     }
 
     func toggleDisplayFormat() {
-        // If there's typed input but no result yet, parse it first
-        if state.currentResult == nil && !state.inputBuffer.isEmpty {
-            evaluateCurrentInput()
-        }
         state.displayFormat = (state.displayFormat == .feetInches) ? .inchesOnly : .feetInches
-        if let m = state.currentResult {
+
+        // If mid-input, try to reformat just the input buffer text
+        if !state.inputBuffer.isEmpty {
+            if let parsed = try? FracCalcBridge.parse(state.inputBuffer) {
+                let formatted: String
+                switch state.displayFormat {
+                case .feetInches: formatted = FracCalcBridge.fmtFeetInches(parsed)
+                case .inchesOnly: formatted = FracCalcBridge.fmtInchesOnly(parsed)
+                }
+                state.inputBuffer = formatted
+                state.displayText = formatted
+            }
+        } else if let m = state.currentResult {
             updateDisplay(m)
         }
     }
