@@ -99,10 +99,18 @@ class CalculatorViewModel {
         // If mid-input, try to reformat just the input buffer text
         if !state.inputBuffer.isEmpty {
             if let parsed = try? FracCalcBridge.parse(state.inputBuffer) {
+                // Show the other format from what the input looks like,
+                // not based on current displayFormat state. If the current
+                // text looks the same in the new format, show the opposite.
+                let feetInches = FracCalcBridge.fmtFeetInches(parsed)
+                let inchesOnly = FracCalcBridge.fmtInchesOnly(parsed)
                 let formatted: String
-                switch state.displayFormat {
-                case .feetInches: formatted = FracCalcBridge.fmtFeetInches(parsed)
-                case .inchesOnly: formatted = FracCalcBridge.fmtInchesOnly(parsed)
+                if state.inputBuffer == feetInches || state.displayText == feetInches {
+                    formatted = inchesOnly
+                    state.displayFormat = .inchesOnly
+                } else {
+                    formatted = feetInches
+                    state.displayFormat = .feetInches
                 }
                 state.inputBuffer = formatted
                 state.displayText = formatted
