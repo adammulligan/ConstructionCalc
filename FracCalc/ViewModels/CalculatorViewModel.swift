@@ -93,6 +93,23 @@ class CalculatorViewModel {
         }
     }
 
+    func toggleSign() {
+        if !state.inputBuffer.isEmpty {
+            // Toggle sign on the input buffer
+            if state.inputBuffer.hasPrefix("-") {
+                state.inputBuffer.removeFirst()
+            } else {
+                state.inputBuffer = "-" + state.inputBuffer
+            }
+            state.displayText = state.inputBuffer
+        } else if let m = state.currentResult {
+            // Toggle sign on the current result
+            let negated = Measurement(numerator: -m.numerator, denominator: m.denominator)
+            state.currentResult = negated
+            updateDisplay(negated)
+        }
+    }
+
     func toggleDisplayFormat() {
         state.displayFormat = (state.displayFormat == .feetInches) ? .inchesOnly : .feetInches
 
