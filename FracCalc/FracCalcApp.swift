@@ -1,17 +1,12 @@
-//
-//  FracCalcApp.swift
-//  FracCalc
-//
-//  Created by Adam Mulligan on 3/5/26.
-//
-
 import SwiftUI
+import SwiftData
 
 @main
 struct FracCalcApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            CalculatorView()
         }
+        .modelContainer(for: HistoryEntry.self)
     }
 }
