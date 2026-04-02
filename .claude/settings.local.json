@@ -21,7 +21,11 @@
       "Bash(source \"$HOME/.cargo/env\" && ./build.sh 2>&1)",
       "Bash(xcodebuild -runFirstLaunch 2>&1)",
       "Bash(git add FracCalc/ && git status)",
-      "Bash(git commit -m \"$\\(cat <<'EOF'\nfeat: iOS app — calculator UI, state machine, history, settings\n\n- FracCalcBridge: Swift wrapper around uniffi bindings\n- CalculatorViewModel: state machine with arithmetic, memory, format toggle\n- KeypadView: custom keypad with fraction hotkeys and operator buttons\n- DisplayView: monospaced measurement display with memory indicator\n- CalculatorView: main screen composing display + keypad\n- HistoryEntry + HistoryViewModel: SwiftData persistence\n- SettingsView: precision picker\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>\nEOF\n\\)\")"
+      "Bash(git commit -m \"$\\(cat <<'EOF'\nfeat: iOS app — calculator UI, state machine, history, settings\n\n- FracCalcBridge: Swift wrapper around uniffi bindings\n- CalculatorViewModel: state machine with arithmetic, memory, format toggle\n- KeypadView: custom keypad with fraction hotkeys and operator buttons\n- DisplayView: monospaced measurement display with memory indicator\n- CalculatorView: main screen composing display + keypad\n- HistoryEntry + HistoryViewModel: SwiftData persistence\n- SettingsView: precision picker\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(/usr/bin/find /Users/ammullig/src/construction_calc -type f \\\\\\( -name \"*.swift\" -o -name \"*.rs\" -o -name \"*.toml\" -o -name \"*.sh\" -o -name \"*.h\" \\\\\\))",
+      "Bash(/usr/bin/sort)",
+      "Bash(/usr/bin/git:*)",
+      "Bash(/bin/ls:*)"
     ]
   }
 }
