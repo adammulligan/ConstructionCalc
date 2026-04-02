@@ -3,10 +3,14 @@ import SwiftUI
 struct KeypadView: View {
     let viewModel: CalculatorViewModel
     let fractionHotkeys: [(Int, Int)]
+    var customHotkeys: [(Int, Int)] = []
 
     var body: some View {
         VStack(spacing: 8) {
             fractionHotkeyRow
+            if !customHotkeys.isEmpty {
+                customHotkeyRow
+            }
             digitAndOperatorGrid
             bottomRow
         }
@@ -17,6 +21,18 @@ struct KeypadView: View {
         HStack(spacing: 8) {
             ForEach(fractionHotkeys, id: \.1) { (num, den) in
                 CalcButton(label: "\(num)/\(den)", color: .purple) {
+                    viewModel.fractionHotkeyPressed(numerator: num, denominator: den)
+                }
+            }
+        }
+        .frame(height: 48)
+    }
+
+    private var customHotkeyRow: some View {
+        HStack(spacing: 8) {
+            ForEach(Array(customHotkeys.enumerated()), id: \.offset) { _, item in
+                let (num, den) = item
+                CalcButton(label: "\(num)/\(den)", color: .teal) {
                     viewModel.fractionHotkeyPressed(numerator: num, denominator: den)
                 }
             }

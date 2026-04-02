@@ -4,10 +4,22 @@ import SwiftData
 struct CalculatorView: View {
     @State private var viewModel = CalculatorViewModel()
     @AppStorage("maxDenominator") private var maxDenominator: Int = 16
+    @AppStorage("customHotkeys") private var customHotkeysJSON: String = "[]"
     @State private var showSettings = false
     @State private var showHistory = false
     @State private var historyViewModel = HistoryViewModel()
     @Environment(\.modelContext) private var modelContext
+
+    private var customHotkeys: [(Int, Int)] {
+        guard let data = customHotkeysJSON.data(using: .utf8),
+              let decoded = try? JSONDecoder().decode([[Int]].self, from: data) else {
+            return []
+        }
+        return decoded.compactMap { pair in
+            guard pair.count == 2 else { return nil }
+            return (pair[0], pair[1])
+        }
+    }
 
     var body: some View {
         VStack(spacing: 12) {
@@ -29,7 +41,8 @@ struct CalculatorView: View {
 
             KeypadView(
                 viewModel: viewModel,
-                fractionHotkeys: [(1, 2), (1, 4), (1, 8), (1, 16)]
+                fractionHotkeys: [(1, 2), (1, 4), (1, 8), (1, 16)],
+                customHotkeys: customHotkeys
             )
         }
         .padding()
