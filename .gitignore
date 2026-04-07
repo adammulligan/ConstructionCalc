@@ -3,3 +3,8 @@ bindings/
 FracCalc/Frameworks/
 xcuserdata/
 *.xcuserstate
+*.a
+*.dylib
+.DS_Store
+DerivedData/
+build/
