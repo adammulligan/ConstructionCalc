@@ -734,6 +734,17 @@ public func divideMeasurements(a: Measurement, b: Measurement) -> Double  {
 })
 }
 /**
+ * Format as decimal inches: "41.375\""
+ * Up to 4 decimal places, trailing zeros stripped.
+ */
+public func formatDecimal(m: Measurement) -> String  {
+    return try!  FfiConverterString.lift(try! rustCall() {
+    uniffi_fraccalc_core_fn_func_format_decimal(
+        FfiConverterTypeMeasurement_lower(m),$0
+    )
+})
+}
+/**
  * Format as feet and inches: "3' 5-3/8\""
  * Omits zero parts (e.g., "3'" not "3' 0\"", "3/8\"" not "0' 3/8\"").
  */
@@ -835,6 +846,9 @@ private let initializationResult: InitializationResult = {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_fraccalc_core_checksum_func_divide_measurements() != 54713) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_fraccalc_core_checksum_func_format_decimal() != 12084) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_fraccalc_core_checksum_func_format_feet_inches() != 52509) {

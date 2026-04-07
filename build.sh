@@ -46,8 +46,9 @@ xcodebuild -create-xcframework \
         -headers "$BINDINGS_DIR" \
     -output "$XCFRAMEWORK_DIR"
 
+echo "==> Copying Swift binding into Xcode project..."
+cp "$BINDINGS_DIR/${LIB_NAME}.swift" "./FracCalc/${LIB_NAME}.swift"
+
 echo "Done."
 echo "XCFramework: $XCFRAMEWORK_DIR"
-echo "Swift binding: $BINDINGS_DIR/${LIB_NAME}.swift"
-echo ""
-echo "Add the .xcframework and .swift file to your Xcode project."
+echo "Swift binding: FracCalc/${LIB_NAME}.swift"

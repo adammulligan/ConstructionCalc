@@ -35,6 +35,10 @@ struct FracCalcBridge {
         formatInchesOnly(m: m)
     }
 
+    static func fmtDecimal(_ m: Measurement) -> String {
+    formatDecimal(m: m)
+    }
+
     static func snap(_ m: Measurement, maxDenominator: Int64) -> SnapResult {
         snapToPrecision(m: m, maxDenominator: maxDenominator)
     }

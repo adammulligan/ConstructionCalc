@@ -21,6 +21,8 @@ struct CalculatorState {
     var pendingOperator: Operator? = nil
     var currentResult: Measurement? = nil
     var displayFormat: DisplayFormat = .feetInches
+    var useDecimal: Bool = false
+    var inputStartedDecimal: Bool = false
     var memory: Measurement? = nil
     var isApproximate: Bool = false
     var expressionParts: [String] = []
