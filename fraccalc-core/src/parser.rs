@@ -35,7 +35,8 @@ pub fn parse_measurement(input: &str) -> Result<Measurement, ParseError> {
     let input = input.replace("ft", "'").replace("in", "\"");
     let input = input.trim();
 
-    let mut feet: i64 = 0;
+    let mut feet_num: i64 = 0;
+    let mut feet_den: i64 = 1;
     let mut inch_whole: i64 = 0;
     let mut frac_num: i64 = 0;
     let mut frac_den: i64 = 1;
@@ -43,9 +44,11 @@ pub fn parse_measurement(input: &str) -> Result<Measurement, ParseError> {
 
     let remaining = if let Some(tick_pos) = input.find('\'') {
         let feet_str = input[..tick_pos].trim();
-        feet = feet_str.parse::<i64>().map_err(|_| ParseError::InvalidFormat {
+        let (n, d) = parse_decimal_or_int(feet_str).ok_or_else(|| ParseError::InvalidFormat {
             input: input.to_string(),
         })?;
+        feet_num = n;
+        feet_den = d;
         has_any = true;
         input[tick_pos + 1..].trim().trim_end_matches('"').trim()
     } else {
@@ -76,6 +79,16 @@ pub fn parse_measurement(input: &str) -> Result<Measurement, ParseError> {
             frac_num = n;
             frac_den = d;
             has_any = true;
+        } else if remaining.contains('.') {
+            // Decimal inches "1.5"
+            let (n, d) = parse_decimal_or_int(remaining).ok_or_else(|| ParseError::InvalidFormat {
+                input: input.to_string(),
+            })?;
+            // Treat as fractional inches: n/d inches
+            frac_num = n;
+            frac_den = d;
+            inch_whole = 0;
+            has_any = true;
         } else {
             // Whole inches "5"
             inch_whole = remaining.parse::<i64>().map_err(|_| ParseError::InvalidFormat {
@@ -89,10 +102,39 @@ pub fn parse_measurement(input: &str) -> Result<Measurement, ParseError> {
         return Err(ParseError::InvalidFormat { input: input.to_string() });
     }
 
-    let total_num = (feet * 12 + inch_whole) * frac_den + frac_num;
+    // Convert feet to inches: feet_num/feet_den feet = feet_num*12/feet_den inches
+    // Combine with inch_whole and frac_num/frac_den
+    // Total = (feet_num * 12) / feet_den + inch_whole + frac_num / frac_den
     let sign = if negative { -1 } else { 1 };
 
-    Ok(Measurement::normalize(total_num * sign, frac_den))
+    // Common denominator: feet_den * frac_den
+    let common_den = feet_den * frac_den;
+    let total_num = feet_num * 12 * frac_den + (inch_whole * frac_den + frac_num) * feet_den;
+
+    Ok(Measurement::normalize(total_num * sign, common_den))
+}
+
+/// Parse a string as either a decimal ("1.5") or integer ("3"), returning (numerator, denominator).
+fn parse_decimal_or_int(s: &str) -> Option<(i64, i64)> {
+    let s = s.trim();
+    if let Some(dot_pos) = s.find('.') {
+        let int_part = &s[..dot_pos];
+        let dec_part = &s[dot_pos + 1..];
+        if dec_part.is_empty() {
+            // Trailing dot like "3." — treat as integer
+            let n = int_part.parse::<i64>().ok()?;
+            return Some((n, 1));
+        }
+        let dec_digits = dec_part.len() as u32;
+        let denominator = 10_i64.pow(dec_digits);
+        let int_val = if int_part.is_empty() { 0 } else { int_part.parse::<i64>().ok()? };
+        let dec_val = dec_part.parse::<i64>().ok()?;
+        let numerator = int_val * denominator + dec_val;
+        Some((numerator, denominator))
+    } else {
+        let n = s.parse::<i64>().ok()?;
+        Some((n, 1))
+    }
 }
 
 fn parse_fraction(s: &str) -> Option<(i64, i64)> {

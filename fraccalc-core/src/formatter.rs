@@ -28,6 +28,23 @@ pub fn format_feet_inches(m: Measurement) -> String {
     }
 }
 
+/// Format as decimal inches: "41.375\""
+/// Up to 4 decimal places, trailing zeros stripped.
+#[uniffi::export]
+pub fn format_decimal(m: Measurement) -> String {
+    let value = m.numerator as f64 / m.denominator as f64;
+    let negative = value < 0.0;
+    let abs_value = value.abs();
+    let sign = if negative { "-" } else { "" };
+
+    // Format to 4 decimal places, then strip trailing zeros
+    let formatted = format!("{:.4}", abs_value);
+    let formatted = formatted.trim_end_matches('0');
+    let formatted = formatted.trim_end_matches('.');
+
+    format!("{sign}{formatted}\"")
+}
+
 /// Format as inches only: "41-3/8\""
 #[uniffi::export]
 pub fn format_inches_only(m: Measurement) -> String {

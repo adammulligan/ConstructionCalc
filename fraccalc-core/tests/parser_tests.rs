@@ -72,3 +72,50 @@ fn test_parse_whitespace_variations() {
     let m2 = parse_measurement("3'  5-3/8\"").unwrap();
     assert_eq!(m1, m2);
 }
+
+#[test]
+fn test_parse_decimal_inches() {
+    // 1.5" = 3/2 inches
+    let m = parse_measurement("1.5\"").unwrap();
+    assert_eq!(m.numerator(), 3);
+    assert_eq!(m.denominator(), 2);
+}
+
+#[test]
+fn test_parse_decimal_feet() {
+    // 1.5' = 18 inches
+    let m = parse_measurement("1.5'").unwrap();
+    assert_eq!(m.numerator(), 18);
+    assert_eq!(m.denominator(), 1);
+}
+
+#[test]
+fn test_parse_decimal_bare() {
+    // 2.25 = 9/4 inches
+    let m = parse_measurement("2.25").unwrap();
+    assert_eq!(m.numerator(), 9);
+    assert_eq!(m.denominator(), 4);
+}
+
+#[test]
+fn test_parse_decimal_negative() {
+    let m = parse_measurement("-1.5\"").unwrap();
+    assert_eq!(m.numerator(), -3);
+    assert_eq!(m.denominator(), 2);
+}
+
+#[test]
+fn test_parse_decimal_feet_plus_inches() {
+    // 1.5' 3" = 18 + 3 = 21 inches
+    let m = parse_measurement("1.5' 3\"").unwrap();
+    assert_eq!(m.numerator(), 21);
+    assert_eq!(m.denominator(), 1);
+}
+
+#[test]
+fn test_parse_decimal_roundtrip_with_fraction() {
+    // 1.2" and 1-1/5" should produce the same measurement
+    let m1 = parse_measurement("1.2\"").unwrap();
+    let m2 = parse_measurement("1-1/5\"").unwrap();
+    assert_eq!(m1, m2);
+}

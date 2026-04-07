@@ -1,4 +1,4 @@
-use fraccalc_core::{Measurement, format_feet_inches, format_inches_only};
+use fraccalc_core::{Measurement, format_feet_inches, format_inches_only, format_decimal};
 
 #[test]
 fn test_format_feet_inches_whole() {
@@ -55,4 +55,37 @@ fn test_format_omit_zero_inches() {
     // 3' 0-1/2" should display as "3' 1/2\""
     let m = Measurement::from_feet_inches(3, 0, 1, 2);
     assert_eq!(format_feet_inches(m), "3' 1/2\"");
+}
+
+#[test]
+fn test_format_decimal_whole() {
+    let m = Measurement::from_inches(5);
+    assert_eq!(format_decimal(m), "5\"");
+}
+
+#[test]
+fn test_format_decimal_fraction() {
+    // 3/8 = 0.375
+    let m = Measurement::from_fraction(3, 8);
+    assert_eq!(format_decimal(m), "0.375\"");
+}
+
+#[test]
+fn test_format_decimal_strips_trailing_zeros() {
+    // 1/2 = 0.5, not 0.5000
+    let m = Measurement::from_fraction(1, 2);
+    assert_eq!(format_decimal(m), "0.5\"");
+}
+
+#[test]
+fn test_format_decimal_negative() {
+    let m = Measurement::from_inches(-5);
+    assert_eq!(format_decimal(m), "-5\"");
+}
+
+#[test]
+fn test_format_decimal_feet_as_inches() {
+    // 3' 5-3/8" = 41.375"
+    let m = Measurement::from_feet_inches(3, 5, 3, 8);
+    assert_eq!(format_decimal(m), "41.375\"");
 }
