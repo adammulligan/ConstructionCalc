@@ -119,3 +119,27 @@ fn test_parse_decimal_roundtrip_with_fraction() {
     let m2 = parse_measurement("1-1/5\"").unwrap();
     assert_eq!(m1, m2);
 }
+
+#[test]
+fn test_parse_quote_as_fraction_delimiter() {
+    // 2"3/16 should parse the same as 2-3/16
+    let m1 = parse_measurement("2\"3/16").unwrap();
+    let m2 = parse_measurement("2-3/16").unwrap();
+    assert_eq!(m1, m2);
+}
+
+#[test]
+fn test_parse_quote_delimiter_with_trailing_quote() {
+    // 2"3/16" (trailing quote too) should work
+    let m = parse_measurement("2\"3/16\"").unwrap();
+    assert_eq!(m.numerator(), 35);
+    assert_eq!(m.denominator(), 16);
+}
+
+#[test]
+fn test_parse_quote_delimiter_with_feet() {
+    // 3' 2"3/16 should parse as 3 feet + 2-3/16 inches
+    let m1 = parse_measurement("3' 2\"3/16").unwrap();
+    let m2 = parse_measurement("3' 2-3/16\"").unwrap();
+    assert_eq!(m1, m2);
+}

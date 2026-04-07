@@ -15,6 +15,7 @@ pub enum ParseError {
 /// - "3' 5\"" or "3ft 5in" (feet and inches)
 /// - "3' 5-3/8\"" (feet, inches, fraction)
 /// - "5-3/8\"" or "5-3/8" (inches with fraction)
+/// - "5\"3/8" (inches with fraction, " as delimiter)
 /// - "3/8" (fraction only)
 /// - Negative values with leading "-"
 #[uniffi::export]
@@ -42,7 +43,7 @@ pub fn parse_measurement(input: &str) -> Result<Measurement, ParseError> {
     let mut frac_den: i64 = 1;
     let mut has_any = false;
 
-    let remaining = if let Some(tick_pos) = input.find('\'') {
+    let remaining_ref = if let Some(tick_pos) = input.find('\'') {
         let feet_str = input[..tick_pos].trim();
         let (n, d) = parse_decimal_or_int(feet_str).ok_or_else(|| ParseError::InvalidFormat {
             input: input.to_string(),
@@ -53,6 +54,15 @@ pub fn parse_measurement(input: &str) -> Result<Measurement, ParseError> {
         input[tick_pos + 1..].trim().trim_end_matches('"').trim()
     } else {
         input.trim_end_matches('"').trim()
+    };
+
+    // Handle "2"3/16" format: interior " acts as inches-fraction delimiter (like dash)
+    let remaining_owned;
+    let remaining = if let Some(quote_pos) = remaining_ref.find('"') {
+        remaining_owned = format!("{}-{}", &remaining_ref[..quote_pos], &remaining_ref[quote_pos + 1..]);
+        remaining_owned.as_str()
+    } else {
+        remaining_ref
     };
 
     if !remaining.is_empty() {

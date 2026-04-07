@@ -782,6 +782,7 @@ public func multiply(a: Measurement, scalar: Int64) -> Measurement  {
  * - "3' 5\"" or "3ft 5in" (feet and inches)
  * - "3' 5-3/8\"" (feet, inches, fraction)
  * - "5-3/8\"" or "5-3/8" (inches with fraction)
+ * - "5\"3/8" (inches with fraction, " as delimiter)
  * - "3/8" (fraction only)
  * - Negative values with leading "-"
  */
@@ -860,7 +861,7 @@ private let initializationResult: InitializationResult = {
     if (uniffi_fraccalc_core_checksum_func_multiply() != 2352) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_fraccalc_core_checksum_func_parse_measurement() != 7858) {
+    if (uniffi_fraccalc_core_checksum_func_parse_measurement() != 28987) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_fraccalc_core_checksum_func_simplify() != 12451) {
