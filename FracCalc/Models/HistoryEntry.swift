@@ -10,17 +10,17 @@ class HistoryEntry {
     var displayFormatRaw: String
     var timestamp: Date
 
-    init(expression: String, resultNumerator: Int64, resultDenominator: Int64, displayFormat: DisplayFormat) {
+    init(expression: String, resultNumerator: Int64, resultDenominator: Int64, displayMode: DisplayMode) {
         self.id = UUID()
         self.expression = expression
         self.resultNumerator = resultNumerator
         self.resultDenominator = resultDenominator
-        self.displayFormatRaw = displayFormat == .feetInches ? "feetInches" : "inchesOnly"
+        self.displayFormatRaw = displayMode.rawValue
         self.timestamp = Date()
     }
 
-    var displayFormat: DisplayFormat {
-        displayFormatRaw == "feetInches" ? .feetInches : .inchesOnly
+    var displayMode: DisplayMode {
+        DisplayMode(rawValue: displayFormatRaw) ?? .feetInches
     }
 
     var resultMeasurement: Measurement {

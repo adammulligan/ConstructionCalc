@@ -9,9 +9,10 @@ enum InputMode {
     case feet
 }
 
-enum DisplayFormat {
+enum DisplayMode: String {
     case feetInches
     case inchesOnly
+    case decimal
 }
 
 struct CalculatorState {
@@ -20,9 +21,8 @@ struct CalculatorState {
     var firstOperand: Measurement? = nil
     var pendingOperator: Operator? = nil
     var currentResult: Measurement? = nil
-    var displayFormat: DisplayFormat = .feetInches
-    var useDecimal: Bool = false
-    var inputStartedDecimal: Bool = false
+    var displayMode: DisplayMode = .feetInches
+    var lastFractionalMode: DisplayMode = .feetInches
     var memory: Measurement? = nil
     var isApproximate: Bool = false
     var expressionParts: [String] = []

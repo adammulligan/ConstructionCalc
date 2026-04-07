@@ -32,9 +32,10 @@ struct HistoryView: View {
 
     private func formattedResult(_ entry: HistoryEntry) -> String {
         let m = entry.resultMeasurement
-        switch entry.displayFormat {
+        switch entry.displayMode {
         case .feetInches: return FracCalcBridge.fmtFeetInches(m)
         case .inchesOnly: return FracCalcBridge.fmtInchesOnly(m)
+        case .decimal:    return FracCalcBridge.fmtDecimal(m)
         }
     }
 }

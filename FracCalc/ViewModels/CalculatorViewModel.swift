@@ -8,9 +8,6 @@ class CalculatorViewModel {
     var modelContext: ModelContext?
 
     func digitPressed(_ digit: String) {
-        if digit == "." {
-            state.inputStartedDecimal = true
-        }
         state.inputBuffer += digit
         state.displayText = state.inputBuffer
     }
@@ -32,16 +29,11 @@ class CalculatorViewModel {
 
     func operatorPressed(_ op: Operator) {
         if !state.inputBuffer.isEmpty {
-            // Track if the first operand was entered as decimal
-            if state.firstOperand == nil {
-                state.useDecimal = state.inputStartedDecimal
-            }
             evaluateCurrentInput()
         }
         if let result = state.currentResult {
             state.firstOperand = result
-            let formatted = state.useDecimal ? FracCalcBridge.fmtDecimal(result) : FracCalcBridge.fmtFeetInches(result)
-            state.expressionParts.append(formatted)
+            state.expressionParts.append(formatMeasurement(result))
         }
         state.pendingOperator = op
         let opSymbol: String
@@ -53,14 +45,12 @@ class CalculatorViewModel {
         }
         state.expressionParts.append(opSymbol)
         state.inputBuffer = ""
-        state.inputStartedDecimal = false
     }
 
     func equalsPressed() {
         if !state.inputBuffer.isEmpty {
             if let parsed = try? FracCalcBridge.parse(state.inputBuffer) {
-                let formatted = state.useDecimal ? FracCalcBridge.fmtDecimal(parsed) : FracCalcBridge.fmtFeetInches(parsed)
-                state.expressionParts.append(formatted)
+                state.expressionParts.append(formatMeasurement(parsed))
             }
             evaluateCurrentInput()
         }
@@ -106,7 +96,6 @@ class CalculatorViewModel {
 
     func toggleSign() {
         if !state.inputBuffer.isEmpty {
-            // Toggle sign on the input buffer
             if state.inputBuffer.hasPrefix("-") {
                 state.inputBuffer.removeFirst()
             } else {
@@ -114,7 +103,6 @@ class CalculatorViewModel {
             }
             state.displayText = state.inputBuffer
         } else if let m = state.currentResult {
-            // Toggle sign on the current result
             let negated = Measurement(numerator: -m.numerator, denominator: m.denominator)
             state.currentResult = negated
             updateDisplay(negated)
@@ -122,70 +110,30 @@ class CalculatorViewModel {
     }
 
     func toggleDisplayFormat() {
-        let wasDecimal = state.useDecimal
-        state.useDecimal = false
-
-        // If exiting decimal mode, just show current fractional format without toggling
-        if !wasDecimal {
-            state.displayFormat = (state.displayFormat == .feetInches) ? .inchesOnly : .feetInches
+        finalizeInputIfNeeded()
+        switch state.displayMode {
+        case .decimal:
+            state.displayMode = state.lastFractionalMode
+        case .feetInches:
+            state.displayMode = .inchesOnly
+            state.lastFractionalMode = .inchesOnly
+        case .inchesOnly:
+            state.displayMode = .feetInches
+            state.lastFractionalMode = .feetInches
         }
-
-        // If mid-input, try to reformat just the input buffer text
-        if !state.inputBuffer.isEmpty {
-            if let parsed = try? FracCalcBridge.parse(state.inputBuffer) {
-                let snapped = FracCalcBridge.snap(parsed, maxDenominator: maxDenominator)
-                let feetInches = FracCalcBridge.fmtFeetInches(snapped.value)
-                let inchesOnly = FracCalcBridge.fmtInchesOnly(snapped.value)
-                let formatted: String
-                if state.inputBuffer == feetInches || state.displayText == feetInches {
-                    formatted = inchesOnly
-                    state.displayFormat = .inchesOnly
-                } else {
-                    formatted = feetInches
-                    state.displayFormat = .feetInches
-                }
-                state.inputBuffer = formatted
-                state.displayText = formatted
-            }
-        } else if let m = state.currentResult {
-            let snapped = FracCalcBridge.snap(m, maxDenominator: maxDenominator)
-            state.currentResult = snapped.value
-            state.isApproximate = snapped.isApproximate
-            updateDisplay(snapped.value)
-        }
+        reformatDisplay()
     }
 
     func toggleDecimalFormat() {
-        if !state.inputBuffer.isEmpty {
-            if let parsed = try? FracCalcBridge.parse(state.inputBuffer) {
-                let decimalText = FracCalcBridge.fmtDecimal(parsed)
-                let snapped = FracCalcBridge.snap(parsed, maxDenominator: maxDenominator)
-                let fracText = (state.displayFormat == .feetInches)
-                    ? FracCalcBridge.fmtFeetInches(snapped.value)
-                    : FracCalcBridge.fmtInchesOnly(snapped.value)
-
-                let formatted: String
-                if state.inputBuffer == decimalText || state.displayText == decimalText {
-                    formatted = fracText
-                    state.useDecimal = false
-                } else {
-                    formatted = decimalText
-                    state.useDecimal = true
-                }
-                state.inputBuffer = formatted
-                state.displayText = formatted
-            }
-        } else if let m = state.currentResult {
-            state.useDecimal.toggle()
-            if !state.useDecimal {
-                let snapped = FracCalcBridge.snap(m, maxDenominator: maxDenominator)
-                state.currentResult = snapped.value
-                state.isApproximate = snapped.isApproximate
-                updateDisplay(snapped.value)
-            } else {
-                updateDisplay(m)
-            }
+        finalizeInputIfNeeded()
+        switch state.displayMode {
+        case .decimal:
+            state.displayMode = state.lastFractionalMode
+        case .feetInches, .inchesOnly:
+            state.lastFractionalMode = state.displayMode
+            state.displayMode = .decimal
         }
+        reformatDisplay()
     }
 
     // MARK: - Memory
@@ -228,29 +176,62 @@ class CalculatorViewModel {
         state.currentResult = parsed
     }
 
+    private func formatMeasurement(_ m: Measurement) -> String {
+        switch state.displayMode {
+        case .feetInches: return FracCalcBridge.fmtFeetInches(m)
+        case .inchesOnly: return FracCalcBridge.fmtInchesOnly(m)
+        case .decimal:    return FracCalcBridge.fmtDecimal(m)
+        }
+    }
+
+    private func finalizeInputIfNeeded() {
+        guard !state.inputBuffer.isEmpty else { return }
+        guard let parsed = try? FracCalcBridge.parse(state.inputBuffer) else { return }
+
+        // Auto-detect display mode from input format so the toggle
+        // switches AWAY from what the user typed, not toward it
+        let input = state.inputBuffer
+        if input.contains(".") {
+            state.displayMode = .decimal
+        } else if input.contains("'") {
+            state.displayMode = .feetInches
+            state.lastFractionalMode = .feetInches
+        } else {
+            state.displayMode = .inchesOnly
+            state.lastFractionalMode = .inchesOnly
+        }
+
+        state.currentResult = parsed
+        state.inputBuffer = ""
+    }
+
+    private func reformatDisplay() {
+        guard let m = state.currentResult else { return }
+        if state.displayMode != .decimal {
+            let snapped = FracCalcBridge.snap(m, maxDenominator: maxDenominator)
+            state.currentResult = snapped.value
+            state.isApproximate = snapped.isApproximate
+            updateDisplay(snapped.value)
+        } else {
+            state.isApproximate = false
+            updateDisplay(m)
+        }
+    }
+
+    private func updateDisplay(_ m: Measurement) {
+        let prefix = state.isApproximate ? "\u{2248} " : ""
+        state.displayText = prefix + formatMeasurement(m)
+    }
+
     private func saveHistory(expression: String, result: Measurement) {
         guard let context = modelContext else { return }
         let entry = HistoryEntry(
             expression: expression,
             resultNumerator: result.numerator,
             resultDenominator: result.denominator,
-            displayFormat: state.displayFormat
+            displayMode: state.displayMode
         )
         context.insert(entry)
         try? context.save()
-    }
-
-    private func updateDisplay(_ m: Measurement) {
-        let prefix = state.isApproximate ? "\u{2248} " : ""
-        if state.useDecimal {
-            state.displayText = prefix + FracCalcBridge.fmtDecimal(m)
-        } else {
-            switch state.displayFormat {
-            case .feetInches:
-                state.displayText = prefix + FracCalcBridge.fmtFeetInches(m)
-            case .inchesOnly:
-                state.displayText = prefix + FracCalcBridge.fmtInchesOnly(m)
-            }
-        }
     }
 }
