@@ -9,10 +9,16 @@ enum InputMode {
     case feet
 }
 
-enum DisplayMode: String {
+enum DisplayMode: String, Codable {
     case feetInches
     case inchesOnly
     case decimal
+}
+
+struct MemoryBank: Codable, Equatable {
+    let numerator: Int64
+    let denominator: Int64
+    let displayMode: DisplayMode
 }
 
 struct CalculatorState {
