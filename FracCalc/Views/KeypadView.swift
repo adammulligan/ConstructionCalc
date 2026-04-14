@@ -4,6 +4,8 @@ struct KeypadView: View {
     let viewModel: CalculatorViewModel
     let fractionHotkeys: [(Int, Int)]
     var customHotkeys: [(Int, Int)] = []
+    var memoryBanks: [MemoryBank?] = [nil, nil, nil, nil]
+    var onBanksChanged: (([MemoryBank?]) -> Void)?
 
     var body: some View {
         VStack(spacing: 8) {
@@ -11,6 +13,7 @@ struct KeypadView: View {
             if !customHotkeys.isEmpty {
                 customHotkeyRow
             }
+            memoryBanksRow
             digitAndOperatorGrid
             bottomRow
         }
@@ -35,6 +38,15 @@ struct KeypadView: View {
                 CalcButton(label: "\(num)/\(den)", color: .teal) {
                     viewModel.fractionHotkeyPressed(numerator: num, denominator: den)
                 }
+            }
+        }
+        .frame(height: 48)
+    }
+
+    private var memoryBanksRow: some View {
+        HStack(spacing: 8) {
+            ForEach(0..<4, id: \.self) { index in
+                memoryBankButton(index: index)
             }
         }
         .frame(height: 48)
@@ -70,6 +82,50 @@ struct KeypadView: View {
             CalcButton(label: "M+", color: .gray) { viewModel.memoryAdd() }
         }
         .frame(height: 48)
+    }
+
+    private func memoryBankButton(index: Int) -> some View {
+        let bank = memoryBanks[index]
+        let label = "M\(index + 1)"
+
+        return Button {
+            let updated = viewModel.bankTapped(index: index, banks: memoryBanks)
+            onBanksChanged?(updated)
+        } label: {
+            VStack(spacing: 1) {
+                if let bank = bank {
+                    let m = Measurement(numerator: bank.numerator, denominator: bank.denominator)
+                    Text(CalculatorViewModel.formatMeasurement(m, mode: bank.displayMode))
+                        .font(.caption)
+                        .fontWeight(.medium)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.5)
+                    Text(label)
+                        .font(.system(size: 9))
+                        .foregroundColor(.white.opacity(0.7))
+                } else {
+                    Text(label)
+                        .font(.caption)
+                        .fontWeight(.medium)
+                }
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(bank != nil ? Color.indigo : Color.gray.opacity(0.5))
+            .foregroundColor(.white)
+            .cornerRadius(8)
+        }
+        .contextMenu {
+            if let bank = bank {
+                let m = Measurement(numerator: bank.numerator, denominator: bank.denominator)
+                Text(CalculatorViewModel.formatMeasurement(m, mode: bank.displayMode))
+                Button(role: .destructive) {
+                    let updated = viewModel.bankCleared(index: index, banks: memoryBanks)
+                    onBanksChanged?(updated)
+                } label: {
+                    Label("Clear", systemImage: "trash")
+                }
+            }
+        }
     }
 
     @ViewBuilder
