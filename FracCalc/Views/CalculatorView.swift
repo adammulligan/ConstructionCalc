@@ -5,6 +5,7 @@ struct CalculatorView: View {
     @State private var viewModel = CalculatorViewModel()
     @AppStorage("maxDenominator") private var maxDenominator: Int = 16
     @AppStorage("customHotkeys") private var customHotkeysJSON: String = "[]"
+    @AppStorage("memoryBanks") private var memoryBanksJSON: String = "[null,null,null,null]"
     @State private var showSettings = false
     @State private var showHistory = false
     @State private var historyViewModel = HistoryViewModel()
@@ -19,6 +20,20 @@ struct CalculatorView: View {
             guard pair.count == 2 else { return nil }
             return (pair[0], pair[1])
         }
+    }
+
+    private var memoryBanks: [MemoryBank?] {
+        guard let data = memoryBanksJSON.data(using: .utf8),
+              let decoded = try? JSONDecoder().decode([MemoryBank?].self, from: data) else {
+            return [nil, nil, nil, nil]
+        }
+        return decoded
+    }
+
+    private func saveMemoryBanks(_ banks: [MemoryBank?]) {
+        guard let data = try? JSONEncoder().encode(banks),
+              let json = String(data: data, encoding: .utf8) else { return }
+        memoryBanksJSON = json
     }
 
     var body: some View {
@@ -42,7 +57,9 @@ struct CalculatorView: View {
             KeypadView(
                 viewModel: viewModel,
                 fractionHotkeys: [(1, 2), (1, 4), (1, 8), (1, 16)],
-                customHotkeys: customHotkeys
+                customHotkeys: customHotkeys,
+                memoryBanks: memoryBanks,
+                onBanksChanged: saveMemoryBanks
             )
         }
         .padding()
