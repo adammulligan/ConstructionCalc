@@ -170,7 +170,46 @@ class CalculatorViewModel {
         state.memory = nil
     }
 
+    // MARK: - Memory Banks
+
+    func bankTapped(index: Int, banks: [MemoryBank?]) -> [MemoryBank?] {
+        var updated = banks
+
+        if let bank = banks[index] {
+            // Bank is filled: recall the value
+            let measurement = Measurement(numerator: bank.numerator, denominator: bank.denominator)
+            state.currentResult = measurement
+            state.inputBuffer = ""
+            updateDisplay(measurement)
+        } else {
+            // Bank is empty: store current value
+            finalizeInputIfNeeded()
+            guard let current = state.currentResult else { return updated }
+            updated[index] = MemoryBank(
+                numerator: current.numerator,
+                denominator: current.denominator,
+                displayMode: state.displayMode
+            )
+        }
+
+        return updated
+    }
+
+    func bankCleared(index: Int, banks: [MemoryBank?]) -> [MemoryBank?] {
+        var updated = banks
+        updated[index] = nil
+        return updated
+    }
+
     // MARK: - Private
+
+    static func formatMeasurement(_ m: Measurement, mode: DisplayMode) -> String {
+        switch mode {
+        case .feetInches: return FracCalcBridge.fmtFeetInches(m)
+        case .inchesOnly: return FracCalcBridge.fmtInchesOnly(m)
+        case .decimal:    return FracCalcBridge.fmtDecimal(m)
+        }
+    }
 
     private func evaluateCurrentInput() {
         guard let parsed = try? FracCalcBridge.parse(state.inputBuffer) else {
