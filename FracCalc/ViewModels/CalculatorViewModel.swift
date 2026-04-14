@@ -36,6 +36,7 @@ class CalculatorViewModel {
             state.expressionParts.append(formatMeasurement(result))
         }
         state.pendingOperator = op
+        state.currentResult = nil
         let opSymbol: String
         switch op {
         case .add: opSymbol = "+"
@@ -84,7 +85,9 @@ class CalculatorViewModel {
     }
 
     func clearPressed() {
+        let savedMemory = state.memory
         state = CalculatorState()
+        state.memory = savedMemory
     }
 
     func backspacePressed() {
@@ -159,6 +162,7 @@ class CalculatorViewModel {
     func memoryRecall() {
         guard let mem = state.memory else { return }
         state.currentResult = mem
+        state.inputBuffer = ""
         updateDisplay(mem)
     }
 

@@ -65,6 +65,7 @@ struct KeypadView: View {
             CalcButton(label: "\u{00B1}", color: .gray) { viewModel.toggleSign() }
             CalcButton(label: "ft\u{2194}in", color: .blue) { viewModel.toggleDisplayFormat() }
             CalcButton(label: "\u{00BD}\u{2194}0.5", color: .blue) { viewModel.toggleDecimalFormat() }
+            CalcButton(label: "MC", color: .gray) { viewModel.memoryClear() }
             CalcButton(label: "MR", color: .gray) { viewModel.memoryRecall() }
             CalcButton(label: "M+", color: .gray) { viewModel.memoryAdd() }
         }
